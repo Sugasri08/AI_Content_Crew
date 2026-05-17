@@ -3,6 +3,10 @@ from crewai import Crew
 from agents import content_researcher, content_writer
 from tasks import research_task, writing_task
 from tools import create_pdf, create_docx
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # ─────────────────────────────────────────────
 # 🎨 PAGE CONFIG
@@ -84,7 +88,7 @@ if "last_inputs" not in st.session_state:
 # 🎯 HEADER
 # ─────────────────────────────────────────────
 st.title("🤖 AI Content Generator Pro")
-st.caption("CrewAI · Ollama · qwen2.5:1.5b")
+st.caption("CrewAI · Groq · Llama 3 (Lightning Fast Cloud Execution)")
 
 # ─────────────────────────────────────────────
 # ⚙️ SIDEBAR — Settings + History
@@ -167,6 +171,7 @@ def run_crew(topic, content_type, tone, word_count):
     writer     = content_writer()
     research   = research_task(researcher, topic)
     writing    = writing_task(writer, topic, content_type, tone, word_count, research)
+    
     crew = Crew(
         agents=[researcher, writer],
         tasks=[research, writing],
@@ -197,7 +202,7 @@ def save_to_history(topic, content_type, tone, content):
 should_run = (generate or regenerate) and topic
 
 if should_run:
-    with st.spinner("🧠 AI Agents are researching and writing..."):
+    with st.spinner("🧠 Groq Cloud Agents are researching and writing..."):
         try:
             content = run_crew(topic, content_type, tone, word_count)
             st.session_state.current_content = content
@@ -210,13 +215,13 @@ if should_run:
             save_to_history(topic, content_type, tone, content)
             st.success("✅ Content generated successfully!")
         except Exception as e:
-            err = str(e)
-            if "connection" in err.lower() or "ollama" in err.lower():
-                st.error("❌ Cannot reach Ollama. Make sure it's running: `ollama serve`")
-            elif "model" in err.lower():
-                st.error("❌ Model not found. Run: `ollama pull qwen2.5:1.5b`")
+            err = str(e).lower()
+            if "api_key" in err or "unauthorized" in err or "api key" in err:
+                st.error("❌ Groq API Key missing or unauthorized! Check your `.env` file.")
+            elif "model" in err or "not_found" in err:
+                st.error("❌ Model validation failed. Check model spelling in `agents.py`.")
             else:
-                st.error(f"❌ Unexpected error: {err}")
+                st.error(f"❌ Groq Connection Error: {str(e)}")
             st.stop()
 
 
@@ -233,7 +238,7 @@ if st.session_state.current_content:
     m1, m2, m3, m4 = st.columns(4)
     m1.metric("📝 Words",      words)
     m2.metric("🔤 Characters", characters)
-    m3.metric("📖 Read Time",  reading_time(content))
+    m3.metric("📖 Read Time",   reading_time(content))
     m4.metric("💬 Sentences",  sentences)
 
     st.divider()
