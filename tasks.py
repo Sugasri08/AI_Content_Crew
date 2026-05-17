@@ -1,39 +1,43 @@
 from crewai import Task
- 
 
 def research_task(agent, topic):
     return Task(
-        description=f"Gather comprehensive insights, data points, and context about: {topic}.",
-        expected_output="A bulleted list of research insights, current trends, and structural details.",
+        description=f"Gather comprehensive insights, data points, and current trends about: {topic}.",
+        expected_output="A clean list of raw facts, key insights, and context about the topic.",
         agent=agent
     )
 
 def writing_task(agent, topic, content_type, tone, word_count, research_context):
-    # 🌟 CRITICAL FIX: Explicitly instruct the model how to layout different types
+    # Enforce strict visual formatting constraints depending on the dropdown selection
     layout_instructions = ""
+    
     if content_type == "Blog Post":
-        layout_instructions = "Include an engaging H1 title, conversational introduction, subheadings (H2/H3), and a conclusion."
+        layout_instructions = "Include an engaging main H1 title, a hook introduction, subheadings (H2/H3) for distinct sections, conversational spacing, and a summary conclusion."
+    
     elif content_type == "LinkedIn Post":
-        layout_instructions = "Start with a strong hook sentence, use short single-sentence paragraphs, linebreaks for readability, bullet points, and add 3-5 relevant hashtags at the bottom. DO NOT use email greetings like 'Dear' or subject lines."
+        layout_instructions = "Start with an attention-grabbing hook sentence. Use short, punchy paragraphs (1-2 sentences max), generous spacing/linebreaks, bullet points for key items, relevant emojis for visual breaks, and exactly 3-5 hashtags at the ultimate bottom. DO NOT use email introductions like 'Dear', 'Subject:', or formal letter sign-offs."
+    
     elif content_type == "YouTube Script":
-        layout_instructions = "Structure it cleanly as an audio/visual script. Include clear indicators like [Hook], [Intro Graphic], [Main Segment], [Call to Action], and explicit host dialogue."
+        layout_instructions = "Structure it explicitly as an interactive video production script. Use organizational markers like [Hook - 0:00], [Intro Scene], [Main Segment], and [Call to Action]. Write the actual spoken lines clearly under host speech blocks."
+    
     elif content_type == "Instagram Caption":
-        layout_instructions = "Keep it concise, high-energy, leading with the main value proposition, heavily interspersed with contextual emojis, followed by a block of hashtags."
+        layout_instructions = "Keep it concise, punchy, and highly visual. Lead with a compelling first line to prevent truncation. Use contextual emojis throughout the text, a clear call to action, and place a block of tags at the bottom."
+    
     elif content_type == "Email":
-        layout_instructions = "Structure it precisely as a professional email with a clear 'Subject:' line, an appropriate greeting, a clean body, and a sign-off footer."
+        layout_instructions = "Format it purely as an email. Provide a dedicated 'Subject:' line at the absolute top, followed by a personalized greeting, structured body paragraphs, and a formal closing remark signature block."
 
     return Task(
         description=f"""
-        Using the provided research, write a **{content_type}** about '{topic}'.
+        Using the provided research context, write a **{content_type}** about '{topic}'.
         
-        CRITICAL REQUIREMENTS:
-        1. **Tone**: The entire text must be written in a strict **{tone}** tone.
-        2. **Length**: Target roughly **{word_count} words**.
-        3. **Layout Guidelines**: {layout_instructions}
+        CRITICAL OPERATIONAL RULES:
+        1. **Tone**: You must write exclusively in a **{tone}** tone.
+        2. **Length**: Target approximately **{word_count} words**.
+        3. **Layout Restrictions**: Follow these strict layout rules: {layout_instructions}
         
-        Ensure you only output the generated content itself. Do not write introductory meta-text like 'Here is your post:' or conversational replies.
+        Do not add meta conversational notes like 'Here is your text' or wrap your response in conversational small talk. Output ONLY the raw finalized content.
         """,
-        expected_output=f"A fully finished and formatted {content_type} adhering exactly to the specified layout guidelines.",
+        expected_output=f"A finalized {content_type} fully matching the layout specifications and the {tone} tone instruction.",
         agent=agent,
         context=[research_context]
     )
